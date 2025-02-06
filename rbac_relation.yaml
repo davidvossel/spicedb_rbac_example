@@ -1,0 +1,57 @@
+---
+schema: |-
+  definition user {}
+
+  definition namespace {
+     
+    relation admin: user
+    relation edit: user
+    relation view: user
+
+    permission get = view + edit + admin
+    permission list = view + edit + admin
+    permission watch = view + edit + admin
+
+    permission update = edit + admin
+    permission patch = edit + admin
+
+    permission delete = edit + admin
+    permission create = edit + admin
+
+    permission deleteall = admin
+
+  }
+
+relationships: |-
+  namespace:namespace1#admin@user:user1
+  namespace:namespace2#admin@user:user1
+  namespace:namespace3#admin@user:user1
+  namespace:namespace4#admin@user:user1
+
+  namespace:namespace1#edit@user:user2
+  namespace:namespace2#edit@user:user2
+  namespace:namespace3#edit@user:user2
+
+  namespace:namespace1#view@user:user3
+  namespace:namespace2#view@user:user3
+  namespace:namespace3#view@user:user3
+
+
+
+assertions:
+  assertTrue:
+    - "namespace:namespace1#view@user:user3"
+    - "namespace:namespace1#view@user:user2"
+    - "namespace:namespace1#view@user:user1"
+    - "namespace:namespace1#edit@user:user2"
+    - "namespace:namespace1#edit@user:user1"
+    - "namespace:namespace1#admin@user:user1"
+  assertFalse:
+    - "namespace:namespace1#admin@user:user3"
+
+validation:
+  namespace:namespace1#view:
+    - "[user:user1] is <namespace:namespace1#view>"
+    - "[user:user1] is <namespace:namespace1#edit>"
+    - "[user:user1] is <namespace:namespace1#admin>"
+
