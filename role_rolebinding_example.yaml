@@ -1,0 +1,47 @@
+schema: |-
+  definition user {}
+
+  // This is a schema that can be installed when you know you're using the fabric for kube.
+  // We can have stock schema for core kube RBAC concepts, e.g. ns, role binding, role, user, group
+  definition namespace {
+  	relation binding: role_binding
+  	permission create_kubevirt_virtualmachine = binding->create_kubevirt_virtualmachine
+  	permission get_kubevirt_virtualmachine = binding->get_kubevirt_virtualmachine
+  }
+
+  definition role_binding {
+  	relation subject: user
+  	relation role: role
+  	permission create_kubevirt_virtualmachine = subject & role->create_kubevirt_virtualmachine
+  	permission get_kubevirt_virtualmachine = subject & role->get_kubevirt_virtualmachine
+  }
+
+  definition role {
+  	relation create_kubevirt_virtualmachine: user:*
+  	relation get_kubevirt_virtualmachine: user:*
+  }
+
+  // This corresponds to a CRD for a "vm" resource in api group "foo"
+  // This templates the above definitions to add permissions for the resource.
+  // In kube, these permissions are always the same set of possible verbs.
+  definition kubevirt/virtualmachine {
+  	relation namespace: namespace
+  	relation binding: role_binding
+  	permission get = namespace->get_kubevirt_virtualmachine + binding->get_kubevirt_virtualmachine
+}
+
+relationships: |-
+  role:n1/vm_admin#create_kubevirt_virtualmachine@user:*
+  role:n1/vm_admin#get_kubevirt_virtualmachine@user:*
+  kubevirt/virtualmachine:1#namespace@namespace:n1
+  role_binding:n1/u1_vm_admin#role@role:n1/vm_admin
+  role_binding:n1/u1_vm_admin#subject@user:u1
+  namespace:n1#binding@role_binding:n1/u1_vm_admin
+assertions:
+  assertTrue:
+    - kubevirt/virtualmachine:1#get@user:u1
+  assertFalse:
+    - kubevirt/virtualmachine:1#get@user:u2
+validation: {}
+
+

@@ -2,21 +2,22 @@ schema: |
   
   definition user {}
 
-  caveat has_resource_verb(requested_resource_verb string, allowed_resource_verbs list<string>) {
-    requested_resource_verb in allowed_resource_verbs
+  caveat has_resource_verb(requested_resource string, requested_verb string, allowed_resource_verbs map<list<string>>) {
+    requested_verb in allowed_resource_verbs[requested_resource]
   }
 
-  // namespaces
   definition namespace {
       relation verb: user | user with has_resource_verb
   }
-relationships: |
-  // Some example relationships
-  namespace:ns1#verb@user:user1[has_resource_verb:{"allowed_resource_verbs":["get_vm","get_pod"]}]
+
+relationships: |+
+  namespace:ns1#verb@user:user1[has_resource_verb:{"allowed_resource_verbs":{"vm":["get","list","watch"]}}]
+
 assertions:
   assertTrue:
-    - namespace:ns1#verb@user:user1 with {"requested_resource_verb":"get_vm"}
-    - namespace:ns1#verb@user:user1 with {"requested_resource_verb":"get_pod"}
+    - namespace:ns1#verb@user:user1 with {"requested_resource":"vm","requested_verb":"get"}
+    - namespace:ns1#verb@user:user1 with {"requested_resource":"vm","requested_verb":"list"}
+    - namespace:ns1#verb@user:user1 with {"requested_resource":"vm","requested_verb":"watch"}
   assertFalse:
-    - namespace:ns1#verb@user:user1 with {"requested_resource_verb":"madeup"}
-validation: null
+    - namespace:ns1#verb@user:user1 with {"requested_resource":"vm","requested_verb":"update"}
+    - namespace:ns1#verb@user:user1 with {"requested_resource":"vm","requested_verb":"patch"}
