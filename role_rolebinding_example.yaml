@@ -1,12 +1,12 @@
 schema: |-
   definition user {}
 
-  // This is a schema that can be installed when you know you're using the fabric for kube.
-  // We can have stock schema for core kube RBAC concepts, e.g. ns, role binding, role, user, group
   definition namespace {
   	relation binding: role_binding
+
   	permission create_kubevirt_virtualmachine = binding->create_kubevirt_virtualmachine
   	permission get_kubevirt_virtualmachine = binding->get_kubevirt_virtualmachine
+        // Add more verbs here...
   }
 
   definition role_binding {
@@ -14,6 +14,7 @@ schema: |-
   	relation role: role
   	permission create_kubevirt_virtualmachine = subject & role->create_kubevirt_virtualmachine
   	permission get_kubevirt_virtualmachine = subject & role->get_kubevirt_virtualmachine
+        // Add more verbs here...
   }
 
   definition role {
@@ -21,9 +22,6 @@ schema: |-
   	relation get_kubevirt_virtualmachine: user:*
   }
 
-  // This corresponds to a CRD for a "vm" resource in api group "foo"
-  // This templates the above definitions to add permissions for the resource.
-  // In kube, these permissions are always the same set of possible verbs.
   definition kubevirt/virtualmachine {
   	relation namespace: namespace
   	relation binding: role_binding
