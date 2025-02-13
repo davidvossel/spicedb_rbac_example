@@ -1,0 +1,18 @@
+definition user {}
+ 
+caveat has_valid_ip(user_ip ipaddress, allowed_range string) {
+  user_ip.in_cidr(allowed_range)
+}
+ 
+definition resource {
+    relation viewer: user | user with has_valid_ip
+    permission view = viewer
+}
+
+relationships: |-
+  resource:someresource#viewer@user:somegal[has_valid_ip:{"allowed_range":"10.20.30.0/24"}]
+
+assertTrue:
+  - resource:someresource#view@user:somegal with {"user_ip":"10.20.30.42"}
+assertFalse:
+  - resource:someresource#view@user:somegal with {"user_ip":"11.20.30.42"}
