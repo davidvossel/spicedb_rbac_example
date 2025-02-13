@@ -2,20 +2,21 @@ schema: |
   
   definition user {}
 
-  caveat has_namespaced_permission(requested_resource string, allowed_resources list<string>) {
-    requested_resource in allowed_resources
+  caveat has_resource_verb(requested_resource_verb string, allowed_resource_verbs list<string>) {
+    requested_resource_verb in allowed_resource_verbs
   }
 
+  // namespaces
   definition namespace {
-      relation getter: user | user with has_namespaced_permission
-      permission get = getter
+      relation verb: user | user with has_resource_verb
   }
 relationships: |
-  namespace:ns1#getter@user:user1[has_namespaced_permission:{"allowed_resources":["vm","pod"]}]
+  // Some example relationships
+  namespace:ns1#verb@user:user1[has_resource_verb:{"allowed_resource_verbs":["get_vm","get_pod"]}]
 assertions:
   assertTrue:
-    - namespace:ns1#getter@user:user1 with {"requested_resource":"vm"}
-    - namespace:ns1#getter@user:user1 with {"requested_resource":"pod"}
+    - namespace:ns1#verb@user:user1 with {"requested_resource_verb":"get_vm"}
+    - namespace:ns1#verb@user:user1 with {"requested_resource_verb":"get_pod"}
   assertFalse:
-    - namespace:ns1#getter@user:user1 with {"requested_resource":"madeup"}
+    - namespace:ns1#verb@user:user1 with {"requested_resource_verb":"madeup"}
 validation: null
