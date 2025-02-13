@@ -1,18 +1,21 @@
-definition user {}
- 
-caveat has_valid_ip(user_ip ipaddress, allowed_range string) {
-  user_ip.in_cidr(allowed_range)
-}
- 
-definition resource {
-    relation viewer: user | user with has_valid_ip
-    permission view = viewer
-}
+schema: |
+  
+  definition user {}
 
-relationships: |-
-  resource:someresource#viewer@user:somegal[has_valid_ip:{"allowed_range":"10.20.30.0/24"}]
+  caveat has_namespaced_permission(requested_resource string, allowed_resources list<string>) {
+    requested_resource in allowed_resources
+  }
 
-assertTrue:
-  - resource:someresource#view@user:somegal with {"user_ip":"10.20.30.42"}
-assertFalse:
-  - resource:someresource#view@user:somegal with {"user_ip":"11.20.30.42"}
+  definition namespace {
+      relation getter: user | user with has_namespaced_permission
+      permission get = getter
+  }
+relationships: |
+  namespace:ns1#getter@user:user1[has_namespaced_permission:{"allowed_resources":["vm","pod"]}]
+assertions:
+  assertTrue:
+    - namespace:ns1#getter@user:user1 with {"requested_resource":"vm"}
+    - namespace:ns1#getter@user:user1 with {"requested_resource":"pod"}
+  assertFalse:
+    - namespace:ns1#getter@user:user1 with {"requested_resource":"madeup"}
+validation: null
